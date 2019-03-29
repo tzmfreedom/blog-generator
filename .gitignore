@@ -1,0 +1,8 @@
+.idea/
+dest/
+meta/
+blogs/
+lastUpdated
+.stack-work/
+blog-generator.cabal
+*~

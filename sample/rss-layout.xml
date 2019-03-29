@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+>
+    <channel>
+        <title>{{ site_name }}</title>
+        <description>{{ description }}</description>
+        <sy:updatePeriod>{{ feed_update_period }}</sy:updatePeriod>
+        <sy:updateFrequency>{{ feed_update_frequency }}</sy:updateFrequency>
+        <link>{{ site_url }}</link>
+        <atom:link href="{{ site_url }}{{ feed_path }}" rel="self" type="application/rss+xml" />
+        <lastBuildDate>{{ pub_date }}</lastBuildDate>
+        {% items %}
+        <item>
+            <title>{{ post_title }}</title>
+            <description>{{ post_content }}</description>
+            <pubDate>{{ post_date }}</pubDate>
+            <link>{{ site_url }}{{ post_url }}</link>
+            <guid isPermaLink="true">{{ site_url }}{{ post_url }}</guid>
+        </item>
+        {% end_items %}
+    </channel>
+</rss>
