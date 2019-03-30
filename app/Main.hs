@@ -275,7 +275,7 @@ renderRSS metaInfo = do
     sorted = sortWithDesc (\m -> metaPublishedAt m) metaInfo
 
 formatRFC822 :: String
-formatRFC822 = "%a, %d %b %Y %T %Z"
+formatRFC822 = "%a, %d %b %Y %T %z"
 
 parseItemsBlock :: [Meta] -> Parser String
 parseItemsBlock metaInfo = do
