@@ -24,6 +24,7 @@ import Data.Aeson as JSON
 import Data.Aeson.TH (deriveJSON, defaultOptions, Options(..))
 import Data.Char
 import Data.List as L
+import Data.Time.Clock
 import Data.Time.Format
 import GHC.Exts
 import Debug.Trace
@@ -34,14 +35,16 @@ data Meta = Meta{
   metaDescription :: String,
   metaKeywords :: [String],
   metaSrc :: String,
-  metaPublishedAt :: String
+  metaPublishedAt :: UTCTime
 } deriving Show
 
 data SiteInfo = SiteInfo{
   siName :: String,
   siDescription :: String,
   siSiteUrl :: String,
-  siFeedPath :: String
+  siFeedPath :: String,
+  siFeedUpdatePeriod :: String,
+  siFeedUpdateFrequency :: Integer
 } deriving Show
 
 main :: IO ()
@@ -214,7 +217,7 @@ parser src meta = do
     try (string "{{" *> spaces *> string "body" *> spaces *> string "}}" *> return src) <|>
     try (string "{{" *> spaces *> string "meta" *> spaces *> string "}}" *> return (renderMeta meta)) <|>
     try (string "{{" *> spaces *> string "title" *> spaces *> string "}}" *> return (metaTitle meta)) <|>
-    try (string "{{" *> spaces *> string "publishedAt" *> spaces *> string "}}" *> return (metaPublishedAt meta)) <|>
+    try (string "{{" *> spaces *> string "publishedAt" *> spaces *> string "}}" *> return (formatPublishedAt meta "%Y-%m-%d")) <|>
     (anyChar >>= (\c -> return [c]))
     )
   return $ Prelude.concat ls
@@ -242,33 +245,37 @@ renderIndex metaInfo = do
         (anyChar >>= (\c -> return [c]))
         )
       return $ Prelude.concat parts
-    lst = L.foldl (\x m -> x ++ "<li>" ++ metaPublishedAt m ++ ": <a href=\"" ++ metaToPath m ++ "\">" ++ metaTitle m ++ "</a></li>") "" sorted
+    lst = L.foldl (\x m -> x ++ "<li>" ++ formatPublishedAt m "%Y-%m-%d" ++ ": <a href=\"" ++ metaToPath m ++ "\">" ++ metaTitle m ++ "</a></li>") "" sorted
     sorted = sortWithDesc (\m -> metaPublishedAt m) metaInfo
 
 renderRSS :: [Meta] -> IO String
 renderRSS metaInfo = do
   siteInfo <- readSiteInfo
   layout <- readFile "rss-layout.xml"
-  case parse (p siteInfo) "" layout of
+  current <- getCurrentTime
+  case parse (p siteInfo current) "" layout of
     Left err -> error "ParseError"
     Right xml -> return xml
   where
-    p :: SiteInfo -> Parser String
-    p siteInfo = do
+    p :: SiteInfo -> UTCTime -> Parser String
+    p siteInfo current = do
       parts <- many (
         try (string "{{" *> spaces *> string "site_name" *> spaces *> string "}}" *> return (siName siteInfo)) <|>
         try (string "{{" *> spaces *> string "description" *> spaces *> string "}}" *> return (siDescription siteInfo)) <|>
-        try (string "{{" *> spaces *> string "feed_update_period" *> spaces *> string "}}" *> return "") <|>
-        try (string "{{" *> spaces *> string "feed_update_frequency" *> spaces *> string "}}" *> return "") <|>
+        try (string "{{" *> spaces *> string "feed_update_period" *> spaces *> string "}}" *> return (siFeedUpdatePeriod siteInfo)) <|>
+        try (string "{{" *> spaces *> string "feed_update_frequency" *> spaces *> string "}}" *> return (show $ siFeedUpdateFrequency siteInfo)) <|>
         try (string "{{" *> spaces *> string "site_url" *> spaces *> string "}}" *> return (siSiteUrl siteInfo)) <|>
         try (string "{{" *> spaces *> string "feed_path" *> spaces *> string "}}" *> return (siFeedPath siteInfo)) <|>
-        try (string "{{" *> spaces *> string "pub_date" *> spaces *> string "}}" *> return "") <|>
+        try (string "{{" *> spaces *> string "last_build_date" *> spaces *> string "}}" *> return (formatTime defaultTimeLocale formatRFC822 current)) <|>
         try (parseItemsBlock sorted) <|>
         (anyChar >>= (\c -> return [c]))
         )
       return $ Prelude.concat parts
     sorted :: [Meta]
     sorted = sortWithDesc (\m -> metaPublishedAt m) metaInfo
+
+formatRFC822 :: String
+formatRFC822 = "%a, %d %b %Y %T %Z"
 
 parseItemsBlock :: [Meta] -> Parser String
 parseItemsBlock metaInfo = do
@@ -309,11 +316,15 @@ renderNode (NVar str) m = do
   case str of
     "post_title" -> metaTitle m
     "post_content" -> metaDescription m
-    "post_date" -> metaPublishedAt m
+    "post_date" -> formatPublishedAt m formatRFC822
     "site_url" -> "https://blog.freedom-man.com"
     "post_url" -> "/" ++ takeBaseName (metaSrc m)
     _ -> "foobar"
+  where
 renderNode (NText str) _ = str
+
+formatPublishedAt :: Meta -> String -> String
+formatPublishedAt m format = formatTime defaultTimeLocale format $ metaPublishedAt m
 
 parseTextNode :: Parser ItemNode
 parseTextNode = do
