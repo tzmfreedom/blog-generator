@@ -226,7 +226,7 @@ renderMeta :: Meta -> String
 renderMeta meta = do
   "<title>" ++ metaTitle meta ++ "</title>\n" ++
     "<meta name=\"keywords\" content=\"" ++ keys ++ "\"/>\n" ++
-    "<meta name=\"description\" contents=\"" ++ metaDescription meta ++ "\"/>"
+    "<meta name=\"description\" content=\"" ++ metaTitle meta ++ "\"/>"
     where
       keys :: String
       keys = L.intercalate "," $ metaKeywords meta
