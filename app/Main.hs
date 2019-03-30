@@ -311,7 +311,7 @@ renderNode (NVar str) m = do
     "post_content" -> metaDescription m
     "post_date" -> metaPublishedAt m
     "site_url" -> "https://blog.freedom-man.com"
-    "post_url" -> L.drop (L.length srcDirectory) $ takeBaseName (metaSrc m)
+    "post_url" -> "/" ++ takeBaseName (metaSrc m)
     _ -> "foobar"
 renderNode (NText str) _ = str
 
