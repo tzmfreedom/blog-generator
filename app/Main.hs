@@ -89,13 +89,14 @@ processStatic dir = do
 
 generateStaticFile :: FilePath -> FilePath -> IO ()
 generateStaticFile dir f = do
-  let src = if dir == "" then staticDirectory ++ "/" ++ f else staticDirectory ++ "/" ++ dir ++ "/" ++ f
+  let relativePath = if dir == "" then f else dir ++ "/" ++ f
+      src = staticDirectory ++ "/" ++ relativePath
   exist <- doesDirectoryExist src
   if exist then do
     let destDirectory = "dest" ++ L.drop (L.length staticDirectory) src
     exist <- doesDirectoryExist destDirectory
     if exist then return () else createDirectory destDirectory
-    processStatic f
+    processStatic relativePath
   else do
     copyFile src $ "dest/" ++ L.drop (L.length staticDirectory) src
   return ()
@@ -151,7 +152,9 @@ findAllSource = do
 findUnprocessedSource :: IO [FilePath]
 findUnprocessedSource = do
   files <- listDirectory srcDirectory
-  ListT.toList $ findUnprocessedSource' (Prelude.map (\f -> srcDirectory ++ "/" ++ f) files)
+  layoutFileChanged <- shouldProcessed layoutFile
+  let src = Prelude.map (\f -> srcDirectory ++ "/" ++ f) files
+  if layoutFileChanged then return src else ListT.toList $ findUnprocessedSource' src
 
 findUnprocessedSource' :: [FilePath] -> ListT IO FilePath
 findUnprocessedSource' files = do
@@ -164,10 +167,9 @@ findUnprocessedSource' files = do
 shouldProcessed :: FilePath -> IO Bool
 shouldProcessed f = do
   status <- getFileStatus f
---  last <- lastUpdated
---  let last' = read last :: EpochTime
-  return True
---  return (last' < modificationTime status)
+  last <- lastUpdated
+  let last' = read last :: EpochTime
+  return (last' < modificationTime status)
 
 -- get layout html
 -- Markdown => HTML
@@ -240,7 +242,7 @@ renderIndex metaInfo = do
         (anyChar >>= (\c -> return [c]))
         )
       return $ Prelude.concat parts
-    lst = L.foldl (\x m -> x ++ "<li>" ++ metaPublishedAt m ++ ": <a href=\"/" ++ metaToPath m ++ "\">" ++ metaTitle m ++ "</a></li>") "" sorted
+    lst = L.foldl (\x m -> x ++ "<li>" ++ metaPublishedAt m ++ ": <a href=\"" ++ metaToPath m ++ "\">" ++ metaTitle m ++ "</a></li>") "" sorted
     sorted = sortWithDesc (\m -> metaPublishedAt m) metaInfo
 
 renderRSS :: [Meta] -> IO String
@@ -309,7 +311,7 @@ renderNode (NVar str) m = do
     "post_content" -> metaDescription m
     "post_date" -> metaPublishedAt m
     "site_url" -> "https://blog.freedom-man.com"
-    "post_url" -> L.drop (L.length srcDirectory) $ replaceExtension (metaSrc m) ".html"
+    "post_url" -> L.drop (L.length srcDirectory) $ takeBaseName (metaSrc m)
     _ -> "foobar"
 renderNode (NText str) _ = str
 
@@ -333,7 +335,7 @@ sortWithDesc :: Ord b => (a -> b) -> [a] -> [a]
 sortWithDesc f = sortBy (\x y -> compare (f y) (f x))
 
 metaToPath :: Meta -> String
-metaToPath meta = replaceExtension (takeFileName $ metaSrc meta) ".html"
+metaToPath meta = "/" ++ (takeBaseName $ metaSrc meta)
 
 deriveJSON defaultOptions { fieldLabelModifier = firstLower . Prelude.drop 4 } ''Meta
 deriveJSON defaultOptions { fieldLabelModifier = firstLower . Prelude.drop 2 } ''SiteInfo
