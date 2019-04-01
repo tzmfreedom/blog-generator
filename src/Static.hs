@@ -24,9 +24,9 @@ generateStaticFile dir f = do
       src = staticDirectory ++ "/" ++ relativePath
   exist <- doesDirectoryExist src
   if exist then do
-    let destDirectory = "dest" ++ L.drop (L.length staticDirectory) src
-    exist <- doesDirectoryExist destDirectory
-    if exist then return () else createDirectory destDirectory
+    let distDirectory = "dest" ++ L.drop (L.length staticDirectory) src
+    exist <- doesDirectoryExist distDirectory
+    if exist then return () else createDirectory distDirectory
     processStatic relativePath
   else do
     copyFile src $ "dest/" ++ L.drop (L.length staticDirectory) src

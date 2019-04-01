@@ -57,8 +57,8 @@ layoutFile = "layout.html"
 staticDirectory :: String
 staticDirectory = "static"
 
-destDirectory :: String
-destDirectory = "dest"
+distDirectory :: String
+distDirectory = "dist"
 
 readSiteInfo :: IO SiteInfo
 readSiteInfo = do

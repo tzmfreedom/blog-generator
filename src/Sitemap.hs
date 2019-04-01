@@ -13,7 +13,7 @@ generateSitemap = do
   files <- findAllSource
   meta <- getMetaInfo files
   content <- renderSitemap meta
-  writeFile (destDirectory ++ "/sitemap.xml") content
+  writeFile (distDirectory ++ "/sitemap.xml") content
 
 renderSitemap :: [Meta] -> IO String
 renderSitemap metaInfo = do

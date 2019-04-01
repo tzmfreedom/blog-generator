@@ -19,7 +19,7 @@ generateRSS = do
   files <- findAllSource
   meta <- getMetaInfo files
   content <- renderRSS meta
-  writeFile (destDirectory ++ "/feed.xml") content
+  writeFile (distDirectory ++ "/feed.xml") content
 
 renderRSS :: [Meta] -> IO String
 renderRSS metaInfo = do
