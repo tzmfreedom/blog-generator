@@ -1,7 +1,11 @@
 module Main where
 
 import System.Environment
-import Lib
+import Rss
+import Sitemap
+import Static
+import Index
+import Blog
 
 main :: IO ()
 main = do
