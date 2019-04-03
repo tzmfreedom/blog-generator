@@ -9,7 +9,7 @@ generateIndex :: IO ()
 generateIndex = do
   files <- findAllSource
   meta <- getMetaInfo files
-  writeFile "dest/index.html" =<< renderIndex meta
+  writeFile "dist/index.html" =<< renderIndex meta
 
 renderIndex :: [Meta] -> IO String
 renderIndex metaInfo = do
