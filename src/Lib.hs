@@ -115,7 +115,7 @@ metaFile :: FilePath -> String
 metaFile f = metaDirectory ++ "/" ++ (Prelude.drop (Prelude.length srcDirectory) (replaceExtension f ".yml"))
 
 destFile :: FilePath -> String
-destFile f = "dest/" ++ (Prelude.drop (Prelude.length srcDirectory) (replaceExtension f ".html"))
+destFile f = "dist/" ++ (Prelude.drop (Prelude.length srcDirectory) (replaceExtension f ".html"))
 
 formatRFC822 :: String
 formatRFC822 = "%a, %d %b %Y %T %z"
