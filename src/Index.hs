@@ -5,10 +5,12 @@ import Text.Parsec.String
 import Data.List
 import Lib
 
-generateIndex :: IO ()
-generateIndex = do
-  files <- findAllSource
-  meta <- getMetaInfo files
+generateIndexCommand :: [String] -> IO ()
+generateIndexCommand args = do
+  let srcDirectory = if length args == 0 then defaultSrcDirectory else args !! 0
+      metaDir = if length args < 2 then metaDirectory else args !! 1
+  files <- findAllSource srcDirectory
+  meta <- getMetaInfo metaDir files
   writeFile "dist/index.html" =<< renderIndex meta
 
 renderIndex :: [Meta] -> IO String

@@ -8,10 +8,12 @@ import System.Directory
 import Data.List as L
 import Lib
 
-generateSitemap :: IO ()
-generateSitemap = do
-  files <- findAllSource
-  meta <- getMetaInfo files
+generateSitemapCommand :: [String] -> IO ()
+generateSitemapCommand args = do
+  let srcDirectory = if L.length args == 0 then defaultSrcDirectory else args !! 0
+      metaDir = if L.length args < 2 then metaDirectory else args !! 1
+  files <- findAllSource srcDirectory
+  meta <- getMetaInfo metaDir files
   content <- renderSitemap meta
   writeFile (distDirectory ++ "/sitemap.xml") content
 

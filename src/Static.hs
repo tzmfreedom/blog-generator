@@ -8,8 +8,8 @@ import System.Directory
 import Data.List as L
 import Lib
 
-generateStatic :: IO ()
-generateStatic = processStatic ""
+generateStaticCommand :: [String] -> IO ()
+generateStaticCommand _ = processStatic ""
 
 processStatic :: String -> IO ()
 processStatic dir = do

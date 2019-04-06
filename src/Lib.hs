@@ -45,8 +45,8 @@ data SiteInfo = SiteInfo{
 lastUpdatedFile :: FilePath
 lastUpdatedFile = "lastUpdated"
 
-srcDirectory :: FilePath
-srcDirectory = "blogs"
+defaultSrcDirectory :: FilePath
+defaultSrcDirectory = "blogs"
 
 metaDirectory :: FilePath
 metaDirectory = "meta"
@@ -74,13 +74,13 @@ readSiteInfo = do
 lastUpdated :: IO String
 lastUpdated = readFile lastUpdatedFile
 
-findAllSource :: IO [FilePath]
-findAllSource = do
+findAllSource :: String -> IO [FilePath]
+findAllSource srcDirectory = do
   files <- listDirectory srcDirectory
   return $ Prelude.map (\f -> srcDirectory ++ "/" ++ f) files
 
-findUnprocessedSource :: IO [FilePath]
-findUnprocessedSource = do
+findUnprocessedSource :: String -> IO [FilePath]
+findUnprocessedSource srcDirectory = do
   files <- listDirectory srcDirectory
   layoutFileChanged <- shouldProcessed layoutFile
   let src = Prelude.map (\f -> srcDirectory ++ "/" ++ f) files
@@ -101,21 +101,25 @@ shouldProcessed f = do
   let last' = read last :: EpochTime
   return (last' < modificationTime status)
 
-getMetaInfo:: [FilePath] -> IO [Meta]
-getMetaInfo files = do
+getMetaInfo:: FilePath -> [FilePath] -> IO [Meta]
+getMetaInfo dir files = do
   (flip mapM) files $ \f -> do
-    meta <- decodeFileEither $ metaFile f
+    meta <- decodeFileEither $ metaFile dir f
     return $ getMeta meta f
 
 getMeta :: Either a Meta -> FilePath -> Meta
 getMeta (Right a) _ = a
 getMeta (Left err) f = error f
 
-metaFile :: FilePath -> String
-metaFile f = metaDirectory ++ "/" ++ (Prelude.drop (Prelude.length srcDirectory) (replaceExtension f ".yml"))
+metaFile :: FilePath -> FilePath -> String
+metaFile dir f = do
+  let d:ds = splitDirectories f
+  dir ++ "/" ++ (replaceExtension (joinPath ds) ".yml")
 
 destFile :: FilePath -> String
-destFile f = "dist/" ++ (Prelude.drop (Prelude.length srcDirectory) (replaceExtension f ".html"))
+destFile f = do
+  let d:ds = splitDirectories f
+  distDirectory ++ "/" ++ (replaceExtension (joinPath ds) ".html")
 
 formatRFC822 :: String
 formatRFC822 = "%a, %d %b %Y %T %z"

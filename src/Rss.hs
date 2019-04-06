@@ -14,10 +14,12 @@ data ItemNode = NVar String
   | NText String
   deriving Show
 
-generateRSS :: IO ()
-generateRSS = do
-  files <- findAllSource
-  meta <- getMetaInfo files
+generateRSSCommand :: [String] -> IO ()
+generateRSSCommand args = do
+  let srcDirectory = if L.length args == 0 then defaultSrcDirectory else args !! 0
+      metaDir = if L.length args < 2 then metaDirectory else args !! 1
+  files <- findAllSource srcDirectory
+  meta <- getMetaInfo metaDir files
   content <- renderRSS meta
   writeFile (distDirectory ++ "/feed.xml") content
 

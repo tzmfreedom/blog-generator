@@ -9,10 +9,12 @@ import Data.Time.Clock
 import Data.Text
 import Lib
 
-generate :: IO ()
-generate = do
-  files <- findUnprocessedSource
-  meta <- getMetaInfo files
+generateCommand :: [String] -> IO ()
+generateCommand args = do
+  let srcDirectory = if L.length args == 0 then defaultSrcDirectory else args !! 0
+      metaDir = if L.length args < 2 then metaDirectory else args !! 1
+  files <- findUnprocessedSource srcDirectory
+  meta <- getMetaInfo metaDir files
   processFiles meta
   current <- epochTime
   writeFile lastUpdatedFile $ show current
